@@ -37,14 +37,18 @@ pipeline {
             steps {
                 echo "🧪 Testing the image..."
                 sh """
-                    docker run --rm -d \
-                      --name nginx-test-${BUILD_NUMBER} \
-                      -p 8099:80 \
-                      ${IMAGE_NAME}:${BUILD_NUMBER}
-                    sleep 3
-                    curl -f http://localhost:8099 || exit 1
-                    docker stop nginx-test-${BUILD_NUMBER}
-                    echo "✅ Test passed!"
+                    # Get docker host IP
+            HOST_IP=\$(ip route | grep default | awk '{print \$3}')
+            
+            docker run --rm -d \
+              --name nginx-test-${BUILD_NUMBER} \
+              -p 8099:80 \
+              ${IMAGE_NAME}:${BUILD_NUMBER}
+            
+            sleep 5
+            curl -f http://\${HOST_IP}:8099 || exit 1
+            docker stop nginx-test-${BUILD_NUMBER}
+            echo "✅ Test passed!"
                 """
             }
         }
